@@ -3,10 +3,10 @@ allprojects {
     apply plugin: 'idea'
 
     repositories {
-        maven { url 'https://repository.apache.org/content/groups/snapshots' }
-        mavenRepo name: 'jline', url: "http://jline.sourceforge.net/m2repo"
-        mavenRepo url: "http://jpos.org/maven"
-        mavenRepo name: 'oracle', url: "http://download.oracle.com/maven"
+        maven { url = 'https://repository.apache.org/content/groups/snapshots' }
+        maven { url = "http://jline.sourceforge.net/m2repo" }
+        maven { url = "http://jpos.org/maven" }
+        maven { url =  "http://download.oracle.com/maven" }
         mavenCentral()
         mavenLocal()
     }
@@ -22,7 +22,8 @@ subprojects {
     dependencies {
 
 
-        compile project(":vramel-core")
+      compile project(":vramel-core")
+      compile "org.slf4j:slf4j-api:$slf4jVersion"
     }
 }
 
