@@ -1,12 +1,13 @@
+// Configure this project and each of its sub-projects as follows
 allprojects {
     apply plugin: 'eclipse'
     apply plugin: 'idea'
 
     repositories {
-        maven { url 'https://repository.apache.org/content/groups/snapshots' }
-        mavenRepo name: 'jline', url: "http://jline.sourceforge.net/m2repo"
-        mavenRepo url: "http://jpos.org/maven"
-        mavenRepo name: 'oracle', url: "http://download.oracle.com/maven"
+        maven { url = 'https://repository.apache.org/content/groups/snapshots' }
+        maven { url = "http://jline.sourceforge.net/m2repo" }
+        maven { url = "http://jpos.org/maven" }
+        maven { url = "http://download.oracle.com/maven" }
         mavenCentral()
         mavenLocal()
     }
@@ -15,6 +16,7 @@ allprojects {
 
 group = 'com.nxttxn'
 
+// Configure the sub-projects of this project as follows.
 subprojects {
 
     apply plugin: 'maven'
