@@ -102,12 +102,13 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
     private final StopWatch stopWatch = new StopWatch(false);
     private Date startDate;
     private Container container;
-
+    private ExecutorServiceManager executorServiceManager;
     private UuidGenerator createDefaultUuidGenerator() {
         return new JavaUuidGenerator();
     }
 
     public DefaultVramelContext(Vertx vertx) {
+        this.executorServiceManager = new DefaultExecutorServiceManager(this);
         this.vertx = vertx;
         this.defaultServerFactory = new DefaultServerFactory(vertx);
         this.defaultClientFactory = new DefaultClientFactory(vertx);
@@ -1081,6 +1082,10 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
         doAddService(object, true);
     }
 
+    public ExecutorServiceManager getExecutorServiceManager() {
+        return this.executorServiceManager;
+    }
+
     @Override
     public ExecutorServiceStrategy getExecutorServiceStrategy() {
         throw new UnsupportedOperationException("Not implemented in vramel");
@@ -1458,7 +1463,7 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
         endpoints = new EndpointRegistry(this, endpoints);
         addService(endpoints);
         // special for executorServiceManager as want to stop it manually
-//        doAddService(executorServiceManager, false);
+        doAddService(executorServiceManager, false);
 //        addService(producerServicePool);
 //        addService(inflightRepository);
         addService(shutdownStrategy);
@@ -1663,7 +1668,7 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
 //        }
 
         // shutdown executor service and management as the last one
-//        shutdownServices(executorServiceManager);
+        shutdownServices(executorServiceManager);
 //        shutdownServices(managementStrategy);
 //        shutdownServices(managementMBeanAssembler);
 //        shutdownServices(lifecycleStrategies);
@@ -1707,4 +1712,9 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
     public Container getContainer() {
         return container;
     }
+
+    public void setExecutorServiceManager(ExecutorServiceManager executorServiceManager) {
+        this.executorServiceManager = executorServiceManager;
+    }
+
 }
