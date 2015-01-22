@@ -42,6 +42,7 @@ public class RabbitMQProducer extends DefaultProducer {
 
     public RabbitMQProducer(RabbitMQEndpoint endpoint) throws IOException {
         super(endpoint);
+        logger.trace("Creating new RabbitMQProducer: {}", this);
     }
 
     @Override
@@ -92,7 +93,11 @@ public class RabbitMQProducer extends DefaultProducer {
 
     @Override
     protected void doStart() throws Exception {
+        logger.trace("doStart() called. Initializing executerService.");
+
         this.executorService = getEndpoint().getVramelContext().getExecutorServiceManager().newSingleThreadExecutor(this, "CamelRabbitMQProducer[" + getEndpoint().getQueue() + "]");
+
+        logger.trace("doStart: executerService initialized {}", this.executorService);
 
         try {
             openConnectionAndChannelPool();
@@ -115,8 +120,10 @@ public class RabbitMQProducer extends DefaultProducer {
 
     @Override
     protected void doStop() throws Exception {
+        logger.trace("doStop() called. closing channel, connection");
         closeConnectionAndChannel();
         if (executorService != null) {
+            logger.trace("doStop: Shutting down executerService now.");
             getEndpoint().getVramelContext().getExecutorServiceManager().shutdownNow(executorService);
             executorService = null;
         }
@@ -139,6 +146,8 @@ public class RabbitMQProducer extends DefaultProducer {
         }
         byte[] messageBodyBytes = exchange.getIn().getMandatoryBody(byte[].class);
         AMQP.BasicProperties properties = buildProperties(exchange).build();
+
+        logger.trace("publising message to rabbitMQ exchange: {}, key: {}, properties: {}", exchangeName, key, properties);
 
         basicPublish(exchangeName, key, properties, messageBodyBytes);
     }
