@@ -73,6 +73,7 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
     private final Map<String, FlowService> routeServices = new LinkedHashMap<String, FlowService>();
     private final Map<String, FlowService> suspendedRouteServices = new LinkedHashMap<String, FlowService>();
     private LanguageResolver languageResolver = null;
+    private Registry registry;
     private ClassResolver classResolver = new DefaultClassResolver();
     private PackageScanClassResolver packageScanClassResolver;
     private FactoryFinderResolver factoryFinderResolver = new DefaultFactoryFinderResolver();
@@ -1074,7 +1075,26 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
 
     @Override
     public Registry getRegistry() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (registry == null) {
+            registry = createRegistry();
+            setRegistry(registry);
+        }
+        return registry;
+    }
+
+    public void setRegistry(Registry registry) {
+        // wrap the registry so we always do property placeholder lookups
+        if (!(registry instanceof PropertyPlaceholderDelegateRegistry)) {
+            registry = new PropertyPlaceholderDelegateRegistry(this, registry);
+        }
+        this.registry = registry;
+    }
+
+    /**
+     * Lazily create a default implementation
+     */
+    protected Registry createRegistry() {
+       return new SimpleRegistry();
     }
 
     @Override
