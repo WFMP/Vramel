@@ -34,6 +34,7 @@ public class VramelBusMod extends BusModBase {
         PropertiesComponent pc = new PropertiesComponent();
         //right now we'll just hard code this. if it works we can do something fancy
         pc.setLocation("classpath:vramel.properties");
+        pc.setIgnoreMissingLocation(true);  // Don't flip out if the vramel.properties does not exist.
         vramelContext = new DefaultVramelContext(this);
         vramelContext.addComponent("properties", pc);
 
