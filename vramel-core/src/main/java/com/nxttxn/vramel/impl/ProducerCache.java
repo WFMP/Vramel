@@ -16,21 +16,28 @@
  */
 package com.nxttxn.vramel.impl;
 
-import java.util.Map;
-
-
-import com.nxttxn.vramel.*;
-import com.nxttxn.vramel.processor.UnitOfWorkProducer;
+import com.nxttxn.vramel.AsyncProcessor;
+import com.nxttxn.vramel.AsyncProducerCallback;
+import com.nxttxn.vramel.Endpoint;
+import com.nxttxn.vramel.Exchange;
+import com.nxttxn.vramel.ExchangePattern;
+import com.nxttxn.vramel.FailedToCreateProducerException;
+import com.nxttxn.vramel.Processor;
+import com.nxttxn.vramel.Producer;
+import com.nxttxn.vramel.ProducerCallback;
+import com.nxttxn.vramel.VramelContext;
 import com.nxttxn.vramel.processor.async.AsyncExchangeResult;
 import com.nxttxn.vramel.processor.async.OptionalAsyncResultHandler;
+import com.nxttxn.vramel.support.ServiceSupport;
 import com.nxttxn.vramel.util.AsyncProcessorConverterHelper;
 import com.nxttxn.vramel.util.AsyncProcessorHelper;
 import com.nxttxn.vramel.util.ServiceHelper;
 import com.nxttxn.vramel.util.StopWatch;
-import org.apache.camel.support.ServiceSupport;
 import org.apache.camel.util.LRUCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * Cache containing created {@link Producer}.
@@ -98,10 +105,12 @@ public class ProducerCache extends ServiceSupport {
 
 
     protected void doStart() throws Exception {
+        LOG.debug("Starting {}", this);
         ServiceHelper.startServices(producers.values());
     }
 
     protected void doStop() throws Exception {
+        LOG.debug("Stopping {}", this);
         // when stopping we intend to shutdown
         ServiceHelper.stopAndShutdownServices(producers.values());
         producers.clear();

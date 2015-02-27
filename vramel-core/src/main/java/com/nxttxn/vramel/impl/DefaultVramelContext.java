@@ -73,6 +73,7 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
     private final Map<String, FlowService> routeServices = new LinkedHashMap<String, FlowService>();
     private final Map<String, FlowService> suspendedRouteServices = new LinkedHashMap<String, FlowService>();
     private LanguageResolver languageResolver = null;
+    private Registry registry;
     private ClassResolver classResolver = new DefaultClassResolver();
     private PackageScanClassResolver packageScanClassResolver;
     private FactoryFinderResolver factoryFinderResolver = new DefaultFactoryFinderResolver();
@@ -102,12 +103,13 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
     private final StopWatch stopWatch = new StopWatch(false);
     private Date startDate;
     private Container container;
-
+    private ExecutorServiceManager executorServiceManager;
     private UuidGenerator createDefaultUuidGenerator() {
         return new JavaUuidGenerator();
     }
 
     public DefaultVramelContext(Vertx vertx) {
+        this.executorServiceManager = new DefaultExecutorServiceManager(this);
         this.vertx = vertx;
         this.defaultServerFactory = new DefaultServerFactory(vertx);
         this.defaultClientFactory = new DefaultClientFactory(vertx);
@@ -1073,12 +1075,35 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
 
     @Override
     public Registry getRegistry() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (registry == null) {
+            registry = createRegistry();
+            setRegistry(registry);
+        }
+        return registry;
+    }
+
+    public void setRegistry(Registry registry) {
+        // wrap the registry so we always do property placeholder lookups
+        if (!(registry instanceof PropertyPlaceholderDelegateRegistry)) {
+            registry = new PropertyPlaceholderDelegateRegistry(this, registry);
+        }
+        this.registry = registry;
+    }
+
+    /**
+     * Lazily create a default implementation
+     */
+    protected Registry createRegistry() {
+       return new SimpleRegistry();
     }
 
     @Override
     public void addService(Object object) throws Exception {
         doAddService(object, true);
+    }
+
+    public ExecutorServiceManager getExecutorServiceManager() {
+        return this.executorServiceManager;
     }
 
     @Override
@@ -1458,7 +1483,7 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
         endpoints = new EndpointRegistry(this, endpoints);
         addService(endpoints);
         // special for executorServiceManager as want to stop it manually
-//        doAddService(executorServiceManager, false);
+        doAddService(executorServiceManager, false);
 //        addService(producerServicePool);
 //        addService(inflightRepository);
         addService(shutdownStrategy);
@@ -1663,7 +1688,7 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
 //        }
 
         // shutdown executor service and management as the last one
-//        shutdownServices(executorServiceManager);
+        shutdownServices(executorServiceManager);
 //        shutdownServices(managementStrategy);
 //        shutdownServices(managementMBeanAssembler);
 //        shutdownServices(lifecycleStrategies);
@@ -1707,4 +1732,9 @@ public class DefaultVramelContext extends ServiceSupport implements ModelVramelC
     public Container getContainer() {
         return container;
     }
+
+    public void setExecutorServiceManager(ExecutorServiceManager executorServiceManager) {
+        this.executorServiceManager = executorServiceManager;
+    }
+
 }

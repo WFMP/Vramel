@@ -2,11 +2,13 @@ package com.nxttxn.vramel.impl;
 
 import com.nxttxn.vramel.*;
 import com.nxttxn.vramel.support.ServiceSupport;
+import com.nxttxn.vramel.util.EndpointHelper;
 import com.nxttxn.vramel.util.IntrospectionSupport;
 import com.nxttxn.vramel.util.ObjectHelper;
 import com.nxttxn.vramel.util.URISupport;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -148,6 +150,36 @@ public abstract class DefaultEndpoint extends ServiceSupport implements Endpoint
         return consumerProperties;
     }
 
+    protected void configureConsumer(Consumer consumer) throws Exception {
+        if (consumerProperties != null) {
+            // use a defensive copy of the consumer properties as the methods below will remove the used properties
+            // and in case we restart routes, we need access to the original consumer properties again
+            Map<String, Object> copy = new HashMap<String, Object>(consumerProperties);
+
+            // set reference properties first as they use # syntax that fools the regular properties setter
+            EndpointHelper.setReferenceProperties(getVramelContext(), consumer, copy);
+            EndpointHelper.setProperties(getVramelContext(), consumer, copy);
+
+            // special consumer.bridgeErrorHandler option
+//            Object bridge = copy.remove("bridgeErrorHandler");
+//            if (bridge != null && "true".equals(bridge)) {
+//                if (consumer instanceof DefaultConsumer) {
+//                    DefaultConsumer defaultConsumer = (DefaultConsumer) consumer;
+//                    defaultConsumer.setExceptionHandler(new BridgeExceptionHandlerToErrorHandler(defaultConsumer));
+//                } else {
+//                    throw new IllegalArgumentException("Option consumer.bridgeErrorHandler is only supported by endpoints,"
+//                            + " having their consumer extend DefaultConsumer. The consumer is a " + consumer.getClass().getName() + " class.");
+//                }
+//            }
+
+            if (!this.isLenientProperties() && copy.size() > 0) {
+                throw new ResolveEndpointFailedException(this.getEndpointUri(), "There are " + copy.size()
+                        + " parameters that couldn't be set on the endpoint consumer."
+                        + " Check the uri if the parameters are spelt correctly and that they are properties of the endpoint."
+                        + " Unknown consumer parameters=[" + copy + "]");
+            }
+        }
+    }
 
     @Override
     protected void doStart() throws Exception {

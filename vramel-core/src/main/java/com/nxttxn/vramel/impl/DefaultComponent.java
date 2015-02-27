@@ -77,6 +77,7 @@ public abstract class DefaultComponent extends ServiceSupport implements Compone
     @Override
     public Endpoint createEndpoint(String uri, JsonObject config) throws Exception {
         ObjectHelper.notNull(getVramelContext(), "camelContext");
+        LOG.trace("Creating endpoint url={}, config={}", uri, config);
         // check URI string to the unsafe URI characters
         String encodedUri = preProcessUri(uri);
         URI u = new URI(encodedUri);

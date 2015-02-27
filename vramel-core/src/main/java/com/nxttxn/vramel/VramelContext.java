@@ -194,4 +194,6 @@ public interface VramelContext {
     ProducerTemplate createProducerTemplate(int maximumCacheSize);
 
     Container getContainer();
+
+    ExecutorServiceManager getExecutorServiceManager();
 }
