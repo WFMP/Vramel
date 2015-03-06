@@ -17,6 +17,7 @@
 package com.nxttxn.vramel.components.rabbitMQ;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
@@ -244,6 +245,7 @@ public class RabbitMQProducer extends DefaultProducer {
 
         final Map<String, Object> headers = exchange.getIn().getHeaders();
         Map<String, Object> filteredHeaders = new HashMap<String, Object>();
+        SerializableHeaderContainer serializableHeaders = new SerializableHeaderContainer();
 
         // TODO: Add support for a HeaderFilterStrategy. See: org.apache.camel.component.jms.JmsBinding#shouldOutputHeader
         for (Map.Entry<String, Object> header : headers.entrySet()) {
@@ -252,6 +254,8 @@ public class RabbitMQProducer extends DefaultProducer {
             Object value = getValidRabbitMQHeaderValue(header.getValue());
             if (value != null) {
                 filteredHeaders.put(header.getKey(), header.getValue());
+            } else if (header.getValue() instanceof Serializable) {
+                serializableHeaders.put(header.getKey(), header.getValue());
             } else if (logger.isDebugEnabled()) {
                 if (header.getValue() == null) {
                     logger.debug("Ignoring header: {} with null value", header.getKey());
@@ -260,6 +264,10 @@ public class RabbitMQProducer extends DefaultProducer {
                             new Object[]{header.getKey(), ObjectHelper.classCanonicalName(header.getValue()), header.getValue()});
                 }
             }
+        }
+
+        if (!serializableHeaders.isEmpty()) {
+            filteredHeaders.put(RabbitMQConstants.VRAMEL_SERIALIZABLE_HEADERS, serializableHeaders.serialize());
         }
 
         properties.headers(filteredHeaders);

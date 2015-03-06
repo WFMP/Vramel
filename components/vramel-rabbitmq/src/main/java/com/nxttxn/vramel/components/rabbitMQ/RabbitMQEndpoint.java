@@ -164,6 +164,9 @@ public class RabbitMQEndpoint extends DefaultEndpoint {
                 // Convert LongStrings to String.
                 if (entry.getValue() instanceof LongString) {
                     message.setHeader(entry.getKey(), entry.getValue().toString());
+                } else if (entry.getKey().equals(RabbitMQConstants.VRAMEL_SERIALIZABLE_HEADERS)) {
+                    SerializableHeaderContainer serializedHeaders = new SerializableHeaderContainer((byte[])entry.getValue());
+                    serializedHeaders.deserializeInto(message);
                 } else {
                     message.setHeader(entry.getKey(), entry.getValue());
                 }
