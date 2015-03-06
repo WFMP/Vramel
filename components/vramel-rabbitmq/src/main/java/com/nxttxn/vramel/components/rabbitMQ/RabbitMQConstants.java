@@ -36,7 +36,9 @@ public final class RabbitMQConstants {
     public static final String APP_ID = "rabbitmq.APP_ID";
     public static final String RABBITMQ_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
     public static final String RABBITMQ_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
-    
+
+    public static final String VRAMEL_SERIALIZABLE_HEADERS = "rabbitmq.vramel-serializable-headers";
+
     private RabbitMQConstants() {
         //Constants class
     }
