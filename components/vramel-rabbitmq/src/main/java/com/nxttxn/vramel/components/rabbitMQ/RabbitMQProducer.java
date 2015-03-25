@@ -148,7 +148,8 @@ public class RabbitMQProducer extends DefaultProducer {
         byte[] messageBodyBytes = exchange.getIn().getMandatoryBody(byte[].class);
         AMQP.BasicProperties properties = buildProperties(exchange).build();
 
-        logger.trace("publising message to rabbitMQ exchange: {}, key: {}, properties: {}", exchangeName, key, properties);
+        logger.trace("publising {} byte message to rabbitMQ exchange: {}, key: {}, properties: {}",
+                messageBodyBytes.length, exchangeName, key, properties);
 
         basicPublish(exchangeName, key, properties, messageBodyBytes);
     }
@@ -261,7 +262,7 @@ public class RabbitMQProducer extends DefaultProducer {
                     logger.debug("Ignoring header: {} with null value", header.getKey());
                 } else {
                     logger.debug("Ignoring header: {} of class: {} with value: {}",
-                            new Object[]{header.getKey(), ObjectHelper.classCanonicalName(header.getValue()), header.getValue()});
+                            header.getKey(), ObjectHelper.classCanonicalName(header.getValue()), header.getValue());
                 }
             }
         }
