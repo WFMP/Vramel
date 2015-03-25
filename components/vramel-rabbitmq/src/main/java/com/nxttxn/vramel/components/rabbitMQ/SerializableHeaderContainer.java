@@ -17,6 +17,7 @@ public class SerializableHeaderContainer {
         this.headers = new HashMap<>();
     }
 
+    @SuppressWarnings("unchecked")
     public SerializableHeaderContainer(byte[] bytes) {
         Object obj = SerializationUtils.deserialize(bytes);
         if (obj instanceof Map) {
