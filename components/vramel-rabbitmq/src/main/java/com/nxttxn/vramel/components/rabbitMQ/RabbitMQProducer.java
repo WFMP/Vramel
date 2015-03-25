@@ -209,9 +209,14 @@ public class RabbitMQProducer extends DefaultProducer {
             properties.correlationId(correlationId.toString());
         }
 
-        final Object deliveryMode = exchange.getIn().getHeader(RabbitMQConstants.DELIVERY_MODE);
+        Object deliveryMode = exchange.getIn().getHeader(RabbitMQConstants.DELIVERY_MODE);
         if (deliveryMode != null) {
             properties.deliveryMode(Integer.parseInt(deliveryMode.toString()));
+        } else {
+            deliveryMode = getEndpoint().getDeliveryMode();
+            if (deliveryMode != null) {
+                properties.deliveryMode((Integer) deliveryMode);
+            }
         }
 
         final Object userId = exchange.getIn().getHeader(RabbitMQConstants.USERID);
