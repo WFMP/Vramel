@@ -67,6 +67,8 @@ public class RabbitMQEndpoint extends DefaultEndpoint {
     private boolean autoDelete = true;
 //    @UriParam(defaultValue = "true")
     private boolean durable = true;
+    // Default deliveryMode if not set on message, by default only use RabbitMQConstants.DELIVERY_MODE
+    private Integer deliveryMode;
 //    @UriParam(defaultValue = "false")
     private boolean bridgeEndpoint;
     private String queue = String.valueOf(UUID.randomUUID().toString().hashCode());
@@ -365,6 +367,15 @@ public class RabbitMQEndpoint extends DefaultEndpoint {
     public void setDurable(boolean durable) {
         this.durable = durable;
     }
+
+    public Integer getDeliveryMode() {
+        return deliveryMode;
+    }
+
+    public void setDeliveryMode(Integer deliveryMode) {
+        this.deliveryMode = deliveryMode;
+    }
+
 
     public String getQueue() {
         return queue;
