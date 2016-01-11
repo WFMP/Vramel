@@ -4,10 +4,10 @@ allprojects {
     apply plugin: 'idea'
 
     repositories {
-        maven { url = 'https://repository.apache.org/content/groups/snapshots' }
-        maven { url = "http://jline.sourceforge.net/m2repo" }
-        maven { url = "http://jpos.org/maven" }
-        maven { url = "http://download.oracle.com/maven" }
+//        maven { url = 'https://repository.apache.org/content/groups/snapshots' }
+//        maven { url = "http://jline.sourceforge.net/m2repo" }
+//        maven { url = "http://jpos.org/maven" }
+//        maven { url = "http://download.oracle.com/maven" }
         mavenCentral()
         mavenLocal()
     }

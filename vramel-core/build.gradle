@@ -26,14 +26,12 @@ dependencies {
     //axis2
     compile("com.nxttxn:vertx-transport:1.0.0")
 
-    compile "org.apache.axis2:axis2-kernel:1.7.0-SNAPSHOT"
-    compile "org.apache.axis2:axis2-transport-base:1.7.0-SNAPSHOT"
-    compile "org.apache.axis2:addressing:1.7.0-SNAPSHOT"
-    compile "org.apache.rampart:rampart:1.7.0-SNAPSHOT"
-    compile "org.apache.rampart:rampart-core:1.7.0-SNAPSHOT"
-    compile "org.apache.ws.commons.axiom:axiom-api:1.2.18-SNAPSHOT"
-    compile "org.apache.ws.commons.axiom:axiom-dom:1.2.18-SNAPSHOT"
-    compile "org.apache.ws.commons.axiom:axiom-impl:1.2.18-SNAPSHOT"
+    compile "org.apache.axis2:axis2-kernel:$axis2Version"
+    compile "org.apache.axis2:axis2-transport-base:$axis2Version"
+    compile "org.apache.axis2:addressing:$axis2Version"
+    compile "org.apache.rampart:rampart:$axis2Version"
+    compile "org.apache.rampart:rampart-core:$axis2Version"
+
     //xmlbeans
     compile "org.apache.xmlbeans:xmlbeans:2.6.0"
     //jibx
