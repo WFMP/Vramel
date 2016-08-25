@@ -111,7 +111,9 @@ public class RabbitMQProducer extends DefaultProducer {
      * If needed, close Connection and Channel
      */
     private void closeConnectionAndChannel() throws Exception {
-        channelPool.close();
+        if (channelPool != null) {
+            channelPool.close();
+        }
         if (conn != null) {
             logger.debug("Closing connection: {} with timeout: {} ms.", conn, closeTimeout);
             conn.close(closeTimeout);
