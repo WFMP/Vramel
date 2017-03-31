@@ -12,6 +12,8 @@ import com.nxttxn.vramel.processor.async.OptionalAsyncResultHandler;
 import com.nxttxn.vramel.util.AsyncProcessorHelper;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.json.JsonObject;
@@ -26,9 +28,10 @@ import java.net.URI;
  * To change this template use File | Settings | File Templates.
  */
 public class JposProducer extends DefaultAsyncProducer {
+    protected final Logger logger = LoggerFactory.getLogger(JposProducer.class);
     private final JposChannelAdapter endpoint;
     private final JPOSClient jposClient;
-
+    private final int responseTimeout;
 
     public JposProducer(Endpoint endpoint) {
         super(endpoint);
@@ -42,7 +45,10 @@ public class JposProducer extends DefaultAsyncProducer {
         URI defaultUri = URI.create(this.endpoint.getRemaining());
         final String host = config.getString("host", defaultUri.getHost());
         final Number port = config.getNumber("port", defaultUri.getPort());
+        responseTimeout = config.getNumber("response_timeout", 30000 ).intValue();
         URI uri = URI.create(String.format("jpos://%s:%s", host, port));
+
+        logger.info("Creating JPOSClient for {} with response_timeout={}",uri, responseTimeout);
 
         jposClient = clientFactory.createOrFindJPOSClient(uri, config.getString("keyFields", JPOSClient.DEFAULT_KEY));
     }
@@ -61,33 +67,36 @@ public class JposProducer extends DefaultAsyncProducer {
                     return;
                 }
 
-                final Message in = exchange.getIn();
-                final ISOMsg txnMsg = in.getBody(ISOMsg.class);
+                final ISOMsg txnMsg = exchange.getIn().getBody(ISOMsg.class);
 
 
-                jposClient.sendISOMsg(txnMsg, new AsyncResultHandler<ISOMsg>() {
-                    @Override
-                    public void handle(AsyncResult<ISOMsg> isoMsgAsyncResult) {
-                        if (isoMsgAsyncResult.failed()) {
-                            exchange.setException(new RuntimeVramelException("Error sending ISOMsg.", isoMsgAsyncResult.exception));
-                            optionalAsyncResultHandler.done(exchange);
-                            return;
-                        }
-
-                        try {
-                            final Message out = in.copy();
-                            endpoint.addISOMsgToMessage(isoMsgAsyncResult.result, out);
-                            exchange.setOut(out);
-                        } catch (ISOException e) {
-                            exchange.setException(e);
-                        }
-                        optionalAsyncResultHandler.done(exchange);
-                    }
-                });
+                jposClient.sendISOMsg(txnMsg, handleISOMsgResponse(exchange, optionalAsyncResultHandler), responseTimeout);
             }
         });
 
         return false;
+    }
+
+    private AsyncResultHandler<ISOMsg> handleISOMsgResponse(final Exchange exchange, final OptionalAsyncResultHandler optionalAsyncResultHandler) {
+        return new AsyncResultHandler<ISOMsg>() {
+            @Override
+            public void handle(AsyncResult<ISOMsg> isoMsgAsyncResult) {
+                if (isoMsgAsyncResult.failed()) {
+                    exchange.setException(new RuntimeVramelException("Error sending ISOMsg.", isoMsgAsyncResult.exception));
+                    optionalAsyncResultHandler.done(exchange);
+                    return;
+                }
+
+                try {
+                    final Message out = exchange.getIn().copy();
+                    endpoint.addISOMsgToMessage(isoMsgAsyncResult.result, out);
+                    exchange.setOut(out);
+                } catch (ISOException e) {
+                    exchange.setException(e);
+                }
+                optionalAsyncResultHandler.done(exchange);
+            }
+        };
     }
 
     public void process(Exchange exchange) throws Exception {
