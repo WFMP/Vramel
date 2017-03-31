@@ -67,33 +67,36 @@ public class JposProducer extends DefaultAsyncProducer {
                     return;
                 }
 
-                final Message in = exchange.getIn();
-                final ISOMsg txnMsg = in.getBody(ISOMsg.class);
+                final ISOMsg txnMsg = exchange.getIn().getBody(ISOMsg.class);
 
 
-                jposClient.sendISOMsg(txnMsg, new AsyncResultHandler<ISOMsg>() {
-                    @Override
-                    public void handle(AsyncResult<ISOMsg> isoMsgAsyncResult) {
-                        if (isoMsgAsyncResult.failed()) {
-                            exchange.setException(new RuntimeVramelException("Error sending ISOMsg.", isoMsgAsyncResult.exception));
-                            optionalAsyncResultHandler.done(exchange);
-                            return;
-                        }
-
-                        try {
-                            final Message out = in.copy();
-                            endpoint.addISOMsgToMessage(isoMsgAsyncResult.result, out);
-                            exchange.setOut(out);
-                        } catch (ISOException e) {
-                            exchange.setException(e);
-                        }
-                        optionalAsyncResultHandler.done(exchange);
-                    }
-                }, responseTimeout);
+                jposClient.sendISOMsg(txnMsg, handleISOMsgResponse(exchange, optionalAsyncResultHandler), responseTimeout);
             }
         });
 
         return false;
+    }
+
+    private AsyncResultHandler<ISOMsg> handleISOMsgResponse(final Exchange exchange, final OptionalAsyncResultHandler optionalAsyncResultHandler) {
+        return new AsyncResultHandler<ISOMsg>() {
+            @Override
+            public void handle(AsyncResult<ISOMsg> isoMsgAsyncResult) {
+                if (isoMsgAsyncResult.failed()) {
+                    exchange.setException(new RuntimeVramelException("Error sending ISOMsg.", isoMsgAsyncResult.exception));
+                    optionalAsyncResultHandler.done(exchange);
+                    return;
+                }
+
+                try {
+                    final Message out = exchange.getIn().copy();
+                    endpoint.addISOMsgToMessage(isoMsgAsyncResult.result, out);
+                    exchange.setOut(out);
+                } catch (ISOException e) {
+                    exchange.setException(e);
+                }
+                optionalAsyncResultHandler.done(exchange);
+            }
+        };
     }
 
     public void process(Exchange exchange) throws Exception {
