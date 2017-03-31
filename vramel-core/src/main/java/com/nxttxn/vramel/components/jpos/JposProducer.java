@@ -12,6 +12,8 @@ import com.nxttxn.vramel.processor.async.OptionalAsyncResultHandler;
 import com.nxttxn.vramel.util.AsyncProcessorHelper;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.json.JsonObject;
@@ -26,9 +28,10 @@ import java.net.URI;
  * To change this template use File | Settings | File Templates.
  */
 public class JposProducer extends DefaultAsyncProducer {
+    protected final Logger logger = LoggerFactory.getLogger(JposProducer.class);
     private final JposChannelAdapter endpoint;
     private final JPOSClient jposClient;
-
+    private final int responseTimeout;
 
     public JposProducer(Endpoint endpoint) {
         super(endpoint);
@@ -42,7 +45,10 @@ public class JposProducer extends DefaultAsyncProducer {
         URI defaultUri = URI.create(this.endpoint.getRemaining());
         final String host = config.getString("host", defaultUri.getHost());
         final Number port = config.getNumber("port", defaultUri.getPort());
+        responseTimeout = config.getNumber("response_timeout", 30000 ).intValue();
         URI uri = URI.create(String.format("jpos://%s:%s", host, port));
+
+        logger.info("Creating JPOSClient for {} with response_timeout={}",uri, responseTimeout);
 
         jposClient = clientFactory.createOrFindJPOSClient(uri, config.getString("keyFields", JPOSClient.DEFAULT_KEY));
     }
@@ -83,7 +89,7 @@ public class JposProducer extends DefaultAsyncProducer {
                         }
                         optionalAsyncResultHandler.done(exchange);
                     }
-                });
+                }, responseTimeout);
             }
         });
 
