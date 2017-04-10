@@ -1,31 +1,29 @@
 package com.nxttxn.vramel.impl.jpos;
 
-import com.nxttxn.vramel.components.jpos.JposProducer;
 import org.jpos.iso.ISOMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.net.NetSocket;
 import org.vertx.java.core.streams.Pump;
 
 /**
-* Created with IntelliJ IDEA.
-* User: chuck
-* Date: 7/31/13
-* Time: 3:45 PM
-* To change this template use File | Settings | File Templates.
+*
 */
 public class JPOSChannel implements Handler<NetSocket> {
     protected final Logger logger = LoggerFactory.getLogger(JPOSChannel.class);
     private final JPOSChannelIn in;
     private final JPOSChannelOut out;
+    private final String logPrefix;
     private Handler<Void> connectedHandler;
     private Handler<Void> disconnectedHandler;
 
+    JPOSChannel(String name) {
+        this(name, new JPOSChannelIn(name), new JPOSChannelOut(name));
+    }
 
-    public JPOSChannel(JPOSChannelIn in, JPOSChannelOut out) {
+    JPOSChannel(String name, JPOSChannelIn in, JPOSChannelOut out) {
+        this.logPrefix = String.format("[JPOSChannel-%s-%x] ",name, this.hashCode());
         this.in = in;
         this.out = out;
     }
