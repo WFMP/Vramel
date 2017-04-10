@@ -33,8 +33,6 @@ public class JPOSClient {
     public static final String networkManagementResponseMTI = "2810";
     private boolean active;
     private final NetClient netClient;
-    private final JPOSChannelIn in;
-    private final JPOSChannelOut out;
     private final Vertx vertx;
     private final URI uri;
     private JPOSChannel jposChannel;
@@ -47,9 +45,6 @@ public class JPOSClient {
         this.uri = uri;
         this.keyFields = keyFields.split(",");
 
-        in = new JPOSChannelIn();
-        in.newISOMsgHandler(isoMsgReplyHandler);
-        out = new JPOSChannelOut();
 
         netClient = vertx.createNetClient().setReconnectAttempts(ALLWAYS_ATTEMPT_RECONNECT);
         establishConnection();
@@ -85,7 +80,8 @@ public class JPOSClient {
         final String host = uri.getHost();
         final Number port = uri.getPort();
 
-        jposChannel = new JPOSChannel(in, out);
+        jposChannel = new JPOSChannel("c<"+name+">");
+        jposChannel.isoMsgHandler(isoMsgReplyHandler);
         jposChannel.connectedHandler(new Handler<Void>() {
             @Override
             public void handle(Void event) {
@@ -146,7 +142,7 @@ public class JPOSClient {
                 return;
             }
 
-            out.sendISOMsg(isoMsg);
+            jposChannel.sendISOMsg(isoMsg);
             receiveISOMsg(key, asyncResultHandler, timeout);
         } catch (Exception e) {
             asyncResultHandler.handle(new AsyncResult<ISOMsg>(e));

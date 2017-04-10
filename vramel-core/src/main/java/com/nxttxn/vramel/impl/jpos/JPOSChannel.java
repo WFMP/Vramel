@@ -75,4 +75,13 @@ public class JPOSChannel implements Handler<NetSocket> {
 
         this.disconnectedHandler = disconnectedHandler;
     }
+
+    JPOSChannel isoMsgHandler(Handler<ISOMsg> handler) {
+        in.newISOMsgHandler(handler);
+        return this;
+    }
+
+    void sendISOMsg(ISOMsg isoMsg) throws Exception {
+        out.sendISOMsg(isoMsg);
+    }
 }
