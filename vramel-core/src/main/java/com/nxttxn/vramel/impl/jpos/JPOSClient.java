@@ -26,10 +26,10 @@ public class JPOSClient {
     public static final String DEFAULT_KEY = "1000";
     protected final Logger logger = LoggerFactory.getLogger(JPOSClient.class);
 
-    public static final int DELAY = 200;
-    public static final int DEFAULT_TIMEOUT = 5000;
-    public static final int ALLWAYS_ATTEMPT_RECONNECT = -1;
-    public static final String networkManagementRequestMTI = "2800";
+    private static final int DELAY = 200;
+    private static final int DEFAULT_TIMEOUT = 5000;
+    private static final int ALWAYS_ATTEMPT_RECONNECT = -1;
+    private static final String networkManagementRequestMTI = "2800";
     public static final String networkManagementResponseMTI = "2810";
     private boolean active;
     private final NetClient netClient;
