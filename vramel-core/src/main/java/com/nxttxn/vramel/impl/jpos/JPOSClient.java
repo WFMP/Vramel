@@ -36,17 +36,24 @@ public class JPOSClient {
     private final Vertx vertx;
     private final URI uri;
     private JPOSChannel jposChannel;
+    private final String name;
 
     private final String[] keyFields;
 
-
     public JPOSClient(Vertx vertx, URI uri, String keyFields) {
+        this(vertx, uri, keyFields, -1);
+    }
+
+    public JPOSClient(Vertx vertx, URI uri, String keyFields, int connectTimeout) {
         this.vertx = vertx;
         this.uri = uri;
         this.keyFields = keyFields.split(",");
+        this.name = uri.getHost()+":"+uri.getPort();
 
-
-        netClient = vertx.createNetClient().setReconnectAttempts(ALLWAYS_ATTEMPT_RECONNECT);
+        netClient = vertx.createNetClient().setReconnectAttempts(ALWAYS_ATTEMPT_RECONNECT);
+        if (connectTimeout > 0) {
+            netClient.setConnectTimeout(connectTimeout);
+        }
         establishConnection();
     }
 
@@ -63,7 +70,7 @@ public class JPOSClient {
                 String key = getKey(isoMsg);
                 isoMsgResults.put(key, isoMsg.pack());
             } catch (ISOException e) {
-                logger.error("[JPOSClient] Problem handling a response from JPOS.", e);
+                logger.error("[JPOSClient"+name+"] Problem handling a response from JPOS.", e);
             }
         }
     };
@@ -86,21 +93,21 @@ public class JPOSClient {
             @Override
             public void handle(Void event) {
                 try {
-                    logger.info("[JPOSClient] Verifying connection with JPOS");
+                    logger.info("[JPOSClient-"+name+"] Verifying connection with JPOS");
                     initializeJPOSChannel(new AsyncResultHandler<ISOMsg>() {
                         @Override
                         public void handle(AsyncResult<ISOMsg> isoMsgAsyncResult) {
                             if (isoMsgAsyncResult.failed()) {
-                                logger.error("[JPOSClient] Unable to establish connection with JPOS within timeout.", isoMsgAsyncResult.exception);
+                                logger.error("[JPOSClient-"+name+"] Unable to establish connection with JPOS within timeout.", isoMsgAsyncResult.exception);
                                 return;
                             }
 
                             active = true;
-                            logger.info("[JPOSClient] JPOS connection established: {}", isoMsgAsyncResult.result);
+                            logger.info("[JPOSClient-"+name+"] JPOS connection established: {}", isoMsgAsyncResult.result);
                         }
                     });
                 } catch (Exception e) {
-                    logger.error("[JPOSClient] cannot verify JPOS connection", e);
+                    logger.error("[JPOSClient-"+name+"] cannot verify JPOS connection", e);
                 }
             }
         });
@@ -108,7 +115,7 @@ public class JPOSClient {
             @Override
             public void handle(Void event) {
                 active = false;
-                logger.info("[JPOSClient] JPOSChannel disconnected. Attempting to reestablish connection.");
+                logger.info("[JPOSClient-"+name+"] JPOSChannel disconnected. Attempting to reestablish connection.");
                 establishConnection();
             }
         });
@@ -116,7 +123,7 @@ public class JPOSClient {
         netClient.connect(port.intValue(), host, jposChannel).exceptionHandler(new Handler<Exception>() {
             @Override
             public void handle(Exception e) {
-                logger.error("[JPOSClient] NetClient connection exception", e);
+                logger.error("[JPOSClient-"+name+"] NetClient connection exception", e);
             }
         });
     }
@@ -148,10 +155,6 @@ public class JPOSClient {
             asyncResultHandler.handle(new AsyncResult<ISOMsg>(e));
         }
     }
-
-
-
-
 
     public ISOMsg removeResult(String key) throws ISOException {
         final byte[] response = getIsoMsgResults().remove(key);
@@ -190,12 +193,12 @@ public class JPOSClient {
             return;
         }
 
-        logger.info("[JPOSClient] not yet active. Will wait for {} ms", timeout);
+        logger.info("[JPOSClient-"+name+"] not yet active. Will wait for {} ms", timeout);
         vertx.setPeriodic(DELAY, new AbstractTimeoutHandler<Void>(asyncResultHandler, timeout / DELAY, vertx) {
             @Override
             protected boolean resultReceived() {
                 if (active) {
-                    logger.info("[JPOSClient] is now active. Notifying whenActive caller.");
+                    logger.info("[JPOSClient-"+name+"] is now active. Notifying whenActive caller.");
                     asyncResultHandler.handle(new AsyncResult<Void>((Void) null));
                 }
                 return active;
@@ -220,7 +223,7 @@ public class JPOSClient {
                     return true;
                 }
             } catch (ISOException e) {
-                logger.warn("Error reading ISO Msg result. Will keep trying until timeout.", e);
+                logger.warn("[JPOSClient-"+name+"] Error reading ISO Msg result. Will keep trying until timeout.", e);
             }
             return false;
         }

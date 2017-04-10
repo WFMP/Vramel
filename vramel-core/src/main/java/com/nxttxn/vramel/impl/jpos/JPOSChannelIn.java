@@ -21,6 +21,7 @@ public class JPOSChannelIn implements WriteStream {
 
 
     protected final Logger logger = LoggerFactory.getLogger(JPOSChannelIn.class);
+    private final String logPrefix;
     private Handler<Void> drainHandler;
     private Handler<Exception> exceptionHandler;
     private Handler<ISOMsg> newISOMsgHandler;
@@ -31,7 +32,7 @@ public class JPOSChannelIn implements WriteStream {
         @Override
         public void handle(Buffer isoMsgBuffer) {
             isoMsgBuffer.appendString(ISOMSG_DELIM);
-            logger.debug("Incoming jpos data {}", isoMsgBuffer.toString());
+            logger.debug(logPrefix+"Incoming jpos data {}", isoMsgBuffer.toString());
             try {
                 final ISOMsg isoMsg = buildISOMsgFromBytes(isoMsgBuffer.getBytes());
                 newISOMsgHandler.handle(isoMsg);
@@ -40,6 +41,10 @@ public class JPOSChannelIn implements WriteStream {
             }
         }
     });
+
+    public JPOSChannelIn(String name) {
+        this.logPrefix = String.format("[JPOSChannelIn-%s-%x] ", name, this.hashCode());
+    }
 
     public static ISOMsg buildISOMsgFromBytes(byte[] bytes) throws ISOException {
         ISOMsg result = null;

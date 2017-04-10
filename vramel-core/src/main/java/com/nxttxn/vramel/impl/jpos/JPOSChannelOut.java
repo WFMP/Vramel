@@ -21,8 +21,12 @@ public class JPOSChannelOut implements ReadStream {
     private boolean paused;
     private Handler<Exception> exceptionHandler;
     private Handler<Void> endHandler;
+    private final String logPrefix;
 
 
+    public JPOSChannelOut(String name) {
+        this.logPrefix = String.format("[JPOSChannelOut-%s-%x] ", name, hashCode());
+    }
 
     @Override
     public void dataHandler(Handler<Buffer> dataHandler) {
@@ -57,11 +61,11 @@ public class JPOSChannelOut implements ReadStream {
 
     public void sendISOMsg(ISOMsg isoMsg) throws Exception {
         if (dataHandler == null) {
-            throw new RuntimeException("JPOSChannelOut is not configured properly. Please set the data handler.");
+            throw new RuntimeException(logPrefix+"JPOSChannelOut is not configured properly. Please set the data handler.");
         }
 
         if (paused) {
-            throw new RuntimeException("JPOSChannelOut is currently paused.");
+            throw new RuntimeException(logPrefix+"JPOSChannelOut is currently paused.");
         }
 
 
@@ -69,7 +73,7 @@ public class JPOSChannelOut implements ReadStream {
         isoMsg.setPackager(packager);
         final Buffer packedXmlBuffer = new Buffer(isoMsg.pack());
 
-        logger.info("[JPOSChannelOut] Sending this message to jpos {}", packedXmlBuffer.toString());
+        logger.info(logPrefix+"Sending this message to jpos {}", packedXmlBuffer.toString());
 
         dataHandler.handle(packedXmlBuffer);
     }

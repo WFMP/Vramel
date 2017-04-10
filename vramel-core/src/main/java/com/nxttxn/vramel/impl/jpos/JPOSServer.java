@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
+import org.vertx.java.core.net.NetServer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -19,18 +20,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class JPOSServer {
     protected final Logger logger = LoggerFactory.getLogger(JPOSServer.class);
     private final Vertx vertx;
-    private final JPOSChannelIn in;
-    private final JPOSChannelOut out;
+    private JPOSChannelIn in;
+    private JPOSChannelOut out;
+    private String name;
     private JPOSChannel jposChannel;
 
     private Handler<JPOSServerRequest> jposServerRequestHandler;
-
+    private NetServer netServer;
 
 
     public JPOSServer(Vertx vertx) {
         this.vertx = vertx;
-        in = new JPOSChannelIn();
-        out = new JPOSChannelOut();
     }
 
 
@@ -46,16 +46,23 @@ public class JPOSServer {
     public JPOSServer listen(int port, String host) {
         checkNotNull(jposServerRequestHandler);
 
+        name = host+":"+port;
+
+        in = new JPOSChannelIn("s<"+name+">");
+        out = new JPOSChannelOut("s<"+name+">");
+
         in.newISOMsgHandler(new Handler<ISOMsg>() {
             @Override
             public void handle(ISOMsg isoMsg) {
                 jposServerRequestHandler.handle(new DefaultJPOSServerRequest(out, isoMsg));
             }
         });
-        jposChannel = new JPOSChannel(in, out);
-        vertx.createNetServer()
-                .connectHandler(jposChannel)
-                .listen(port, host);
+        jposChannel = new JPOSChannel("s<"+name+">", in, out);
+        netServer = vertx.createNetServer().connectHandler(jposChannel).listen(port, host);
         return this;
+    }
+
+    public void close() {
+        netServer.close();
     }
 }
