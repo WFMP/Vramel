@@ -120,12 +120,13 @@ public class JPOSClient {
             }
         });
 
-        netClient.connect(port.intValue(), host, jposChannel).exceptionHandler(new Handler<Exception>() {
+        netClient.exceptionHandler(new Handler<Exception>() {
             @Override
             public void handle(Exception e) {
                 logger.error("[JPOSClient-"+name+"] NetClient connection exception", e);
             }
         });
+        netClient.connect(port.intValue(), host, jposChannel);
     }
 
 
@@ -171,7 +172,7 @@ public class JPOSClient {
 
     }
 
-    public void initializeJPOSChannel(AsyncResultHandler<ISOMsg> asyncResultHandler) throws Exception {
+    private void initializeJPOSChannel(AsyncResultHandler<ISOMsg> asyncResultHandler) throws Exception {
         final int neverTimeout = -1;
         sendISOMsg(buildNetworkManagementRequestMsg(), asyncResultHandler, neverTimeout);
     }
