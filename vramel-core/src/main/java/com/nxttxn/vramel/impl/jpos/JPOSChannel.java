@@ -30,33 +30,44 @@ public class JPOSChannel implements Handler<NetSocket> {
 
     @Override
     public void handle(final NetSocket socket) {
+        //Setup Pump using In and Out channels
+        final Pump outPump = Pump.createPump(out, socket);
+        final Pump inPump = Pump.createPump(socket, in);
 
         socket.exceptionHandler(new Handler<Exception>() {
             @Override
             public void handle(Exception e) {
-                logger.error("[JPOSChannel] socket exception", e);
+                logger.error(logPrefix+"socket exception", e);
+                outPump.stop();
+                inPump.stop();
+                if (disconnectedHandler != null) {
+                    disconnectedHandler.handle(null);
+                }
             }
         });
         socket.endHandler(new Handler<Void>() {
             @Override
             public void handle(Void event) {
-                logger.info("[JPOSChannel] Socket shutting down. Deactivating JPOSChannel.");
+                logger.info(logPrefix+"Socket shutting down. Deactivating JPOSChannel.");
+                outPump.stop();
+                inPump.stop();
             }
         });
 
         socket.closedHandler(new Handler<Void>() {
             @Override
             public void handle(Void event) {
-                logger.info("[JPOSChannel] Socket closed.");
+                logger.info(logPrefix +"Socket closed.");
+                outPump.stop();
+                inPump.stop();
                 if (disconnectedHandler != null) {
                     disconnectedHandler.handle(null);
                 }
             }
         });
 
-        //Setup Pump using In and Out channels
-        Pump.createPump(out, socket).start();
-        Pump.createPump(socket, in).start();
+        outPump.start();
+        inPump.start();
 
         if (connectedHandler != null) {
             connectedHandler.handle(null);
@@ -64,12 +75,12 @@ public class JPOSChannel implements Handler<NetSocket> {
     }
 
 
-    public void connectedHandler(Handler<Void> connectedHandler) {
+    void connectedHandler(Handler<Void> connectedHandler) {
 
         this.connectedHandler = connectedHandler;
     }
 
-    public void disconnectedHandler(Handler<Void> disconnectedHandler) {
+    void disconnectedHandler(Handler<Void> disconnectedHandler) {
 
         this.disconnectedHandler = disconnectedHandler;
     }
