@@ -26,7 +26,7 @@ public class JPOSChannelIn implements WriteStream {
     private Handler<Exception> exceptionHandler;
     private Handler<ISOMsg> newISOMsgHandler;
 
-    public static final String ISOMSG_DELIM = "</isomsg>\n";
+    private static final String ISOMSG_DELIM = "</isomsg>\n";
 
     private RecordParser isoXmlParser = RecordParser.newDelimited(ISOMSG_DELIM, new Handler<Buffer>() {
         @Override
