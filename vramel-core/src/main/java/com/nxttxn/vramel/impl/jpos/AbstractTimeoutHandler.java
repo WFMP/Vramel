@@ -40,7 +40,7 @@ public abstract class AbstractTimeoutHandler<T> implements Handler<Long> {
         }
 
         if (isTimedOut) {
-            asyncResultHandler.handle(new AsyncResult<T>(new RuntimeException("Timeout waiting for JPOS response")));
+            asyncResultHandler.handle(new AsyncResult<T>(new JPOSResponseTimeoutException("Timeout waiting for JPOS response")));
         }
     }
 
